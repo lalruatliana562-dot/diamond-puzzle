@@ -1,32 +1,40 @@
-  <!DOCTYPE html>
-<html lang="en">
+ <!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Diamond Puzzle Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; margin: 0; padding: 20px; overflow: hidden; }
-        #puzzle-board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 5px; justify-content: center; margin-top: 20px; }
-        .tile { width: 100px; height: 100px; background-image: url('https://img.freepik.com/free-photo/shiny-diamond-crystal-gemstone-luxury-wealth_53876-121226.jpg'); background-size: 300px 300px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
-        .empty { background: #333; cursor: default; }
-        .btn { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 20px; font-size: 16px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: white; text-align: center; margin: 0; padding: 20px; }
+        .stats { display: flex; justify-content: space-around; background: #1e1e1e; padding: 10px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #00d2ff; }
+        #puzzle-board { display: grid; grid-template-columns: repeat(3, 90px); grid-template-rows: repeat(3, 90px); gap: 8px; justify-content: center; margin-top: 10px; }
+        .tile { width: 90px; height: 90px; background-image: url('https://img.freepik.com/free-photo/shiny-diamond-crystal-gemstone-luxury-wealth_53876-121226.jpg'); background-size: 270px 270px; border-radius: 8px; cursor: pointer; border: 1px solid #444; }
+        .empty { background: #222; border: none; }
+        .btn { background: linear-gradient(135deg, #0088cc, #00d2ff); color: white; border: none; padding: 12px 25px; border-radius: 10px; margin-top: 25px; font-weight: bold; width: 100%; max-width: 200px; }
     </style>
 </head>
 <body>
-    <h2>💎 Diamond Puzzle</h2>
-    <p>Welcome, <span id="user-name">Player</span>!</p>
+    <h3>💎 Diamond Puzzle Pro</h3>
     
+    <div class="stats">
+        <div>Player: <b id="user-name">...</b></div>
+        <div>Total: <b id="total-diamonds">0</b> 💎</div>
+    </div>
+
     <div id="puzzle-board"></div>
-    <button class="btn" onclick="shuffle()">Restart Game</button>
+    <button class="btn" onclick="shuffle()">Restart Puzzle</button>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User";
+
+        let score = parseInt(localStorage.getItem('diamondScore')) || 0;
+        document.getElementById('total-diamonds').innerText = score;
 
         const board = document.getElementById('puzzle-board');
-        let tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // 8 is empty
+        let tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
         function createBoard() {
             board.innerHTML = '';
@@ -35,10 +43,9 @@
                 div.classList.add('tile');
                 if (tile === 8) {
                     div.classList.add('empty');
-                    div.innerText = '';
                 } else {
-                    const x = (tile % 3) * 100;
-                    const y = Math.floor(tile / 3) * 100;
+                    const x = (tile % 3) * 90;
+                    const y = Math.floor(tile / 3) * 90;
                     div.style.backgroundPosition = `-${x}px -${y}px`;
                 }
                 div.onclick = () => moveTile(index);
@@ -48,23 +55,27 @@
 
         function moveTile(index) {
             const emptyIndex = tiles.indexOf(8);
-            const validMoves = [index-1, index+1, index-3, index+3];
-            if (validMoves.includes(emptyIndex)) {
+            if ([index-1, index+1, index-3, index+3].includes(emptyIndex)) {
                 [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
                 createBoard();
                 checkWin();
             }
         }
 
+        function checkWin() {
+            if (tiles.every((tile, i) => tile === i)) {
+                score += 500;
+                localStorage.setItem('diamondScore', score);
+                document.getElementById('total-diamonds').innerText = score;
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("CONGRATS! 💎 500 Diamonds i hlawh e!");
+                shuffle();
+            }
+        }
+
         function shuffle() {
             tiles.sort(() => Math.random() - 0.5);
             createBoard();
-        }
-
-        function checkWin() {
-            if (tiles.every((tile, i) => tile === i)) {
-                alert("Wow! I rem dik ta! 💎");
-            }
         }
 
         createBoard();
