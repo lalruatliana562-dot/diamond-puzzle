@@ -1,28 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diamond Puzzle Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #212121; color: white; }
-        .game-box { margin-top: 50px; padding: 20px; border: 2px solid #0088cc; border-radius: 15px; }
-        button { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        .diamond { font-size: 50px; cursor: pointer; transition: transform 0.2s; }
+        .diamond:active { transform: scale(1.2); }
+        .score-board { font-size: 24px; margin: 20px 0; color: #00d2ff; }
+        .btn { background: #0088cc; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="game-box">
-        <h1>💎 Diamond Puzzle Pro</h1>
-        <p>Welcome, <span id="username">Player</span>!</p>
-        <div id="game-status">Game Loading...</div>
-        <br>
-        <button onclick="tg.close()">Close App</button>
-    </div>
+    <h1>💎 Diamond Clicker</h1>
+    <p>Welcome, <span id="username">Player</span>!</p>
+    
+    <div class="score-board">Diamonds: <span id="score">0</span></div>
+    <div class="diamond" onclick="addScore()">💎</div>
+    <p>Click the diamond to collect!</p>
+
+    <br><br>
+    <button class="btn" onclick="tg.close()">Exit Game</button>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // App kha a pum (full screen) in a inhawng ang
-        document.getElementById("username").innerText = tg.initDataUnsafe.user.first_name;
-        document.getElementById("game-status").innerText = "Ready to Play!";
+        tg.expand();
+        
+        document.getElementById("username").innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
+        
+        let score = 0;
+        function addScore() {
+            score++;
+            document.getElementById("score").innerText = score;
+            tg.HapticFeedback.impactOccurred('medium'); // Phone a nghing zeuh ang
+        }
     </script>
 </body>
 </html>
