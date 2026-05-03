@@ -1,154 +1,102 @@
- <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Diamond Puzzle Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 15px; overflow-x: hidden; }
-        .stats { display: flex; justify-content: space-around; background: #1a1a1a; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #00d2ff; }
-        #puzzle-board { display: grid; gap: 6px; justify-content: center; margin: 10px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; }
-        .tile { background: linear-gradient(135deg, #0088cc, #00d2ff); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; }
-        .empty { background: #0f0f0f; border: none; }
-        
-        /* Store Styling */
-        #store-section { display: none; background: #1a1a1a; padding: 20px; border-radius: 20px; border: 1px solid #f39c12; margin-top: 20px; text-align: left; }
-        .store-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #f39c12; }
-        .item-info b { color: #f39c12; }
-        .redeem-btn { background: #f39c12; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        
-        .action-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
-        .btn { padding: 12px; border-radius: 12px; width: 85%; max-width: 240px; font-weight: bold; border: none; cursor: pointer; text-transform: uppercase; }
-        .btn-restart { background: #ff4757; color: white; }
-        .btn-store { background: #f39c12; color: white; }
-        .btn-back { background: #555; color: white; margin-bottom: 15px; }
-    </style>
-</head>
-<body>
+ <style>
+    .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+    .store-card { background: white; color: #333; padding: 15px 5px; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; }
+    .store-card.selected { border: 2px solid #f39c12; background: #fff9f0; }
+    
+    .payment-options { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+    .pay-mode { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 12px; cursor: pointer; }
+    .pay-mode.active { background: #f39c12; color: white; border-color: #f39c12; }
 
-    <div id="game-ui">
-        <h3 style="color: #00d2ff;">💎 Diamond Puzzle Pro</h3>
-        <div class="stats">
-            <div>Player: <b id="user-name">...</b></div>
-            <div>Total: <b id="total-diamonds" style="color: #00d2ff;">0</b> 💎</div>
-        </div>
-        <div id="puzzle-board"></div>
-        <div class="action-btns">
-            <button class="btn btn-restart" onclick="shuffle()">Restart Level</button>
-            <button class="btn btn-store" onclick="toggleStore(true)">🛒 ML Diamond Store</button>
+    .checkout-bar { position: sticky; bottom: 0; background: white; padding: 15px; border-top: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; }
+    .price-tag { color: #f39c12; font-size: 18px; font-weight: bold; }
+    .buy-btn { background: #f39c12; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; }
+</style>
+
+<div id="store-section" style="display:none; background:#f4f4f4; color:#333;">
+    <div style="background: white; padding: 15px; border-bottom: 1px solid #ddd;">
+        <button class="btn btn-back" style="width: auto;" onclick="toggleStore(false)">⬅ Back</button>
+        <h3 style="margin-top:10px;">Diamond Store</h3>
+        
+        <div class="payment-options">
+            <div id="mode-points" class="pay-mode active" onclick="setMode('points')">Use Points</div>
+            <div id="mode-gpay" class="pay-mode" onclick="setMode('gpay')">Buy with G-Pay</div>
         </div>
     </div>
 
-    <div id="store-section">
-        <button class="btn btn-back" onclick="toggleStore(false)">⬅ Back to Game</button>
-        <h3 style="color: #f39c12; text-align: center;">MLBB REDEEM STORE</h3>
-        <p style="font-size: 12px; text-align: center; color: #888;">Collect diamonds to redeem MLBB rewards</p>
-        
-        <div class="store-item">
-            <div class="item-info"><b>5 Diamonds</b><br><small>Cost: 5,000 💎</small></div>
-            <button class="redeem-btn" onclick="redeem(5000, '5 ML Diamonds')">Redeem</button>
+    <div class="store-grid" id="items-list">
         </div>
-        <div class="store-item">
-            <div class="item-info"><b>12 Diamonds</b><br><small>Cost: 12,000 💎</small></div>
-            <button class="redeem-btn" onclick="redeem(12000, '12 ML Diamonds')">Redeem</button>
-        </div>
-        <div class="store-item">
-            <div class="item-info"><b>50 Diamonds</b><br><small>Cost: 50,000 💎</small></div>
-            <button class="redeem-btn" onclick="redeem(50000, '50 ML Diamonds')">Redeem</button>
-        </div>
-        <div class="store-item">
-            <div class="item-info"><b>Starlight Card</b><br><small>Cost: 300,000 💎</small></div>
-            <button class="redeem-btn" onclick="redeem(300000, 'Starlight Card')">Redeem</button>
-        </div>
+
+    <div class="checkout-bar">
+        <div class="price-tag" id="price-display">Select Item</div>
+        <button class="buy-btn" id="action-btn" onclick="handleAction()">PROCEED</button>
     </div>
+</div>
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
-        let gridSize = 4;
-        let tiles = [];
-        let score = parseInt(localStorage.getItem('diamondScore')) || 0;
-        document.getElementById('total-diamonds').innerText = score;
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
+<script>
+    let currentMode = 'points';
+    let selectedItem = null;
 
-        function toggleStore(show) {
-            document.getElementById('game-ui').style.display = show ? 'none' : 'block';
-            document.getElementById('store-section').style.display = show ? 'block' : 'none';
-        }
+    const mlItems = [
+        { name: '5 Diamonds', points: 5000, gpay: 10 },
+        { name: '12 Diamonds', points: 12000, gpay: 20 },
+        { name: '50 Diamonds', points: 50000, gpay: 85 },
+        { name: 'Starlight', points: 300000, gpay: 450 }
+    ];
 
-        function initGame() {
-            tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
-            shuffle();
-        }
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.pay-mode').forEach(el => el.classList.remove('active'));
+        document.getElementById('mode-' + mode).classList.add('active');
+        renderItems();
+        updatePriceDisplay();
+    }
 
-        function createBoard() {
-            const board = document.getElementById('puzzle-board');
-            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            const containerSize = Math.min(window.innerWidth - 40, 350);
-            const tileSize = (containerSize / gridSize) - 8;
-            board.style.width = containerSize + "px";
-            board.innerHTML = '';
-            tiles.forEach((tile, index) => {
-                const div = document.createElement('div');
-                div.style.width = tileSize + "px"; div.style.height = tileSize + "px";
-                div.classList.add('tile');
-                if (tile === (gridSize * gridSize - 1)) {
-                    div.classList.add('empty');
-                } else {
-                    div.innerText = tile + 1;
-                }
-                div.onclick = () => moveTile(index);
-                board.appendChild(div);
-            });
-        }
+    function renderItems() {
+        const list = document.getElementById('items-list');
+        list.innerHTML = '';
+        mlItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'store-card';
+            card.innerHTML = `<b>${item.name}</b><br><small>${currentMode === 'points' ? item.points + ' Points' : '₹' + item.gpay}</small>`;
+            card.onclick = () => {
+                selectedItem = item;
+                document.querySelectorAll('.store-card').forEach(c => c.style.border = '1px solid #ddd');
+                card.style.border = '2px solid #f39c12';
+                updatePriceDisplay();
+            };
+            list.appendChild(card);
+        });
+    }
 
-        function moveTile(index) {
-            const emptyIndex = tiles.indexOf(gridSize * gridSize - 1);
-            const row = Math.floor(index/gridSize), col = index%gridSize;
-            const eRow = Math.floor(emptyIndex/gridSize), eCol = emptyIndex%gridSize;
-            if (Math.abs(row-eRow) + Math.abs(col-eCol) === 1) {
-                [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
-                createBoard();
-                if (tiles.every((t, i) => t === i)) {
-                    score += 50; // Level 1 reward
-                    localStorage.setItem('diamondScore', score);
-                    document.getElementById('total-diamonds').innerText = score;
-                    tg.showAlert("Level Complete! +50 💎");
-                    shuffle();
-                }
-            }
-        }
+    function updatePriceDisplay() {
+        if (!selectedItem) return;
+        const display = document.getElementById('price-display');
+        display.innerText = currentMode === 'points' ? selectedItem.points + ' 💎' : '₹' + selectedItem.gpay;
+    }
 
-        function redeem(cost, item) {
-            if (score >= cost) {
-                tg.showConfirm(`${item} redeem i duh em? ${cost} 💎 i account atangin a hek dawn a ni.`, (ok) => {
+    function handleAction() {
+        if (!selectedItem) { tg.showAlert("Item thlang hmasa rawh le!"); return; }
+
+        if (currentMode === 'points') {
+            if (score >= selectedItem.points) {
+                tg.showConfirm(`${selectedItem.name} i Redeem duh tak tak em?`, (ok) => {
                     if (ok) {
-                        score -= cost;
+                        score -= selectedItem.points;
                         localStorage.setItem('diamondScore', score);
                         document.getElementById('total-diamonds').innerText = score;
-                        tg.showAlert(`SUCCESS! I request kan dawng e. I ML ID leh Server leh i score screenshot hi Admin (Ruata) hnenah thawn rawh.`);
+                        tg.showAlert("Redeem hlawhtling! Screenshot la la Admin hrilh rawh.");
                     }
                 });
             } else {
-                tg.showAlert("I Diamonds a la tlem deuh! Khel leh hnem deuh rawh le.");
+                tg.showAlert("I point a la tawk lo!");
             }
+        } else {
+            // G-Pay Mode
+            tg.showAlert(`₹${selectedItem.gpay} i pe dawn a ni. I G-Pay-ah va lut la, Ruata G-Pay-ah hian va thawn la, screenshot min rawn thawn rawh.`);
+            // Heti hian i G-Pay Link kan dah thei ang
+            window.location.href = "https://t.me/YOUR_USERNAME"; // I hnenah a rawn kal dawn
         }
+    }
 
-        function shuffle() {
-            for (let i = 0; i < 200; i++) {
-                const emptyIndex = tiles.indexOf(gridSize * gridSize - 1);
-                const neighbors = [];
-                if (emptyIndex >= gridSize) neighbors.push(emptyIndex - gridSize);
-                if (emptyIndex < gridSize * (gridSize - 1)) neighbors.push(emptyIndex + gridSize);
-                if (emptyIndex % gridSize !== 0) neighbors.push(emptyIndex - 1);
-                if (emptyIndex % gridSize !== gridSize - 1) neighbors.push(emptyIndex + 1);
-                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-                [tiles[emptyIndex], tiles[randomNeighbor]] = [tiles[randomNeighbor], tiles[emptyIndex]];
-            }
-            createBoard();
-        }
-        initGame();
-    </script>
-</body>
-</html>
+    renderItems();
+</script>
