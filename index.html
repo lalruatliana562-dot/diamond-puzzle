@@ -9,24 +9,19 @@
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
         .stats { display: flex; justify-content: space-around; background: #1a1a1a; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #f1c40f; }
         
-        /* Difficulty Tabs */
-        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; }
+        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
         .tab-btn { background: #333; color: #ccc; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
         .tab-btn.active { background: #f1c40f; color: black; font-weight: bold; }
 
-        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 10px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; }
-        .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; min-height: 200px; }
+        .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .empty { background: #0f0f0f; border: none; box-shadow: none; }
 
         .btn { padding: 12px; border-radius: 12px; width: 90%; font-weight: bold; border: none; cursor: pointer; margin: 5px 0; text-transform: uppercase; }
         .btn-restart { background: #ff4757; color: white; }
         .btn-store { background: #f1c40f; color: black; }
         
-        /* Store and Checkout (Keep original logic) */
         #store-section { display:none; background:#f4f4f4; color:#333; min-height: 100vh; text-align: left; }
-        .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
-        .store-card { background: white; padding: 12px; border-radius: 10px; border: 1px solid #ddd; text-align: center; }
-        .store-card.selected { border: 2.5px solid #f1c40f; }
     </style>
 </head>
 <body>
@@ -35,14 +30,14 @@
         <h3 style="color: #f1c40f; margin: 10px 0;">💎 Diamond Coin Puzzle</h3>
         
         <div class="stats">
-            <div>Player: <b id="user-name">Ruata_</b></div>
+            <div>Player: <b id="user-name">...</b></div>
             <div>Coins: <b id="total-coins" style="color:#f1c40f">0</b> 🪙</div>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="changeLevel(3)">Easy (3x3)</button>
-            <button class="tab-btn" onclick="changeLevel(4)">Medium (4x4)</button>
-            <button class="tab-btn" onclick="changeLevel(5)">Hard (5x5)</button>
+            <button class="tab-btn active" onclick="changeLevel(3, event)">3x3</button>
+            <button class="tab-btn" onclick="changeLevel(4, event)">4x4</button>
+            <button class="tab-btn" onclick="changeLevel(5, event)">5x5</button>
         </div>
 
         <div id="puzzle-board"></div>
@@ -56,10 +51,9 @@
             <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold;">⬅ Back</button>
             <h3 style="margin: 10px 0;">Diamond Coin Store</h3>
         </div>
-        <div class="store-grid" id="items-list"></div>
-        <div style="position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; border-top: 2px solid #f1c40f; display: flex; justify-content: space-between; align-items: center;">
-            <b id="price-display">Select Item</b>
-            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:10px 20px; border-radius:8px; font-weight:bold;">PROCEED</button>
+        <div style="padding: 20px; text-align: center;">
+            <p>Admin be turin a hnuaia button hi hmet rawh.</p>
+            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:15px 30px; border-radius:10px; font-weight:bold; cursor:pointer;">CONTACT ADMIN</button>
         </div>
     </div>
 
@@ -73,10 +67,10 @@
         document.getElementById('total-coins').innerText = score;
         document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
 
-        function changeLevel(size) {
+        function changeLevel(size, event) {
             gridSize = size;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            if(event) event.target.classList.add('active');
             initGame();
         }
 
@@ -88,7 +82,7 @@
         function createBoard() {
             const board = document.getElementById('puzzle-board');
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            const containerSize = Math.min(window.innerWidth - 30, 350);
+            const containerSize = Math.min(window.innerWidth - 40, 350);
             const tileSize = (containerSize / gridSize) - 6;
             board.style.width = containerSize + "px";
             board.innerHTML = '';
@@ -97,8 +91,12 @@
                 const div = document.createElement('div');
                 div.style.width = tileSize + "px"; div.style.height = tileSize + "px";
                 div.classList.add('tile');
-                if (tile === gridSize * gridSize - 1) div.classList.add('empty');
-                else div.innerText = tile + 1;
+                if (tile === gridSize * gridSize - 1) {
+                    div.classList.add('empty');
+                    div.innerText = '';
+                } else {
+                    div.innerText = tile + 1;
+                }
                 div.onclick = () => moveTile(index);
                 board.appendChild(div);
             });
@@ -106,56 +104,4 @@
 
         function moveTile(index) {
             const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
-            const row = Math.floor(index/gridSize), col = index%gridSize;
-            const eRow = Math.floor(emptyIdx/gridSize), eCol = emptyIdx%gridSize;
-            
-            if (Math.abs(row-eRow) + Math.abs(col-eCol) === 1) {
-                [tiles[index], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[index]];
-                createBoard();
-                checkWin();
-            }
-        }
-
-        function checkWin() {
-            if (tiles.every((t, i) => t === i)) {
-                score += (gridSize === 3) ? 5 : (gridSize === 4) ? 10 : 20;
-                localStorage.setItem('diamondScore', score);
-                document.getElementById('total-coins').innerText = score;
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert(`Level Complete! +${(gridSize === 3) ? 5 : (gridSize === 4) ? 10 : 20} Coins 🪙`);
-                
-                // Mahni a in-reset nghalna
-                setTimeout(() => { shuffle(); }, 500);
-            }
-        }
-
-        function shuffle() {
-            // A hma deuh khan shuffle logic kan hmang
-            for (let i = 0; i < 200; i++) {
-                const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
-                const n = [];
-                if (emptyIdx >= gridSize) n.push(emptyIdx - gridSize);
-                if (emptyIdx < gridSize*(gridSize-1)) n.push(emptyIdx + gridSize);
-                if (emptyIdx % gridSize !== 0) n.push(emptyIdx - 1);
-                if (emptyIdx % gridSize !== gridSize-1) n.push(emptyIdx + 1);
-                const r = n[Math.floor(Math.random()*n.length)];
-                [tiles[emptyIdx], tiles[r]] = [tiles[r], tiles[emptyIdx]];
-            }
-            createBoard();
-        }
-
-        // Store Logic (Original)
-        function toggleStore(show) {
-            document.getElementById('game-ui').style.display = show ? 'none' : 'block';
-            document.getElementById('store-section').style.display = show ? 'block' : 'none';
-        }
-        
-        function handleAction() {
-            // I Telegram username hmanga biakna kha helai hian a rawn pawt lut leh dawn nia
-            window.location.href = "https://t.me/Ruata_zote";
-        }
-
-        initGame();
-    </script>
-</body>
-</html>
+            const row = Math
