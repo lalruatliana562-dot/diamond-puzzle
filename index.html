@@ -111,7 +111,7 @@
             });
         }
 
-        function handleAction() {
+                function handleAction() {
             if (!selectedItem) { tg.showAlert("Item thlang rawh!"); return; }
             if (currentMode === 'points') {
                 if (score >= selectedItem.points) {
@@ -121,13 +121,16 @@
                             localStorage.setItem('diamondScore', score);
                             document.getElementById('total-diamonds').innerText = score;
                             tg.showAlert("Success! Admin hnenah i ML ID leh score screenshot hi thawn rawh le.");
-                            window.location.href = "https://t.me/YOUR_USERNAME";
+                            window.location.href = "https://t.me/Ruata_zote"; // He line hi va dah rawh
                         }
                     });
                 } else { tg.showAlert("I Diamond Coin a la tawk lo! Khel hnem deuh rawh."); }
             } else {
                 tg.showAlert(`₹${selectedItem.gpay} man ${selectedItem.name} lei turin Admin be rawh.`);
-                window.location.href = "https://t.me/YOUR_USERNAME";
+                window.location.href = "https://t.me/Ruata_zote"; // He line chauh hi dah rawh
+            }
+        }
+
             }
         }
 
