@@ -6,23 +6,59 @@
     <title>Diamond Puzzle Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 15px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
         .stats { display: flex; justify-content: space-around; background: #1a1a1a; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #00d2ff; }
-        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 10px auto; background: #222; padding: 8px; border-radius: 10px; }
-        .tile { background: #00d2ff; color: #000; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; cursor: pointer; }
-        .empty { background: #0f0f0f; }
-        .btn { padding: 12px; border-radius: 10px; width: 85%; font-weight: bold; border: none; margin-top: 15px; cursor: pointer; background: #f39c12; color: white; }
+        
+        /* Store Layout */
+        .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+        .store-card { background: white; color: #333; padding: 12px 5px; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; text-align: center; }
+        .store-card.selected { border: 2.5px solid #f39c12; background: #fff9f0; }
+        
+        .payment-options { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+        .pay-mode { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 12px; cursor: pointer; background: #eee; color: #333; font-weight: bold; }
+        .pay-mode.active { background: #f39c12; color: white; border-color: #f39c12; }
+
+        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 10px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; }
+        .tile { background: linear-gradient(135deg, #0088cc, #00d2ff); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .empty { background: #0f0f0f; border: none; box-shadow: none; }
+
+        .checkout-bar { position: sticky; bottom: 0; background: white; padding: 15px; border-top: 3px solid #f39c12; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }
+        .price-tag { color: #f39c12; font-size: 18px; font-weight: bold; }
+        .action-btn { background: #f39c12; color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        
+        .btn { padding: 12px; border-radius: 12px; width: 85%; font-weight: bold; border: none; cursor: pointer; margin: 8px 0; text-transform: uppercase; }
+        .btn-restart { background: #ff4757; color: white; }
+        .btn-store { background: #f39c12; color: white; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
     </style>
 </head>
 <body>
-    <h3 style="color: #00d2ff;">💎 Diamond Puzzle Pro</h3>
-    <div class="stats">
-        <div>Player: <b id="user-name">...</b></div>
-        <div>Score: <b id="total-diamonds">0</b> 💎</div>
+
+    <div id="game-ui">
+        <h3 style="color: #00d2ff; margin: 15px 0;">💎 Diamond Puzzle Pro</h3>
+        <div class="stats">
+            <div>Player: <b id="user-name">...</b></div>
+            <div>Total: <b id="total-diamonds" style="color: #00d2ff;">0</b> 💎</div>
+        </div>
+        <div id="puzzle-board"></div>
+        <button class="btn btn-restart" onclick="shuffle()">Restart Game</button>
+        <button class="btn btn-store" onclick="toggleStore(true)">🛒 ML Diamond Store</button>
     </div>
-    <div id="puzzle-board"></div>
-    <button class="btn" onclick="shuffle()">Restart Game</button>
-    <p style="font-size: 12px; color: #888; margin-top: 20px;">Redeem turin Admin hnenah message thawn rawh.</p>
+
+    <div id="store-section" style="display:none; background:#f4f4f4; color:#333; min-height: 100vh;">
+        <div style="background: white; padding: 15px; border-bottom: 1px solid #ddd;">
+            <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold; cursor:pointer; font-size: 16px;">⬅ Back to Game</button>
+            <h3 style="margin: 15px 0;">MLBB Diamond Store</h3>
+            <div class="payment-options">
+                <div id="mode-points" class="pay-mode active" onclick="setMode('points')">Use Points</div>
+                <div id="mode-gpay" class="pay-mode" onclick="setMode('gpay')">Buy (G-Pay)</div>
+            </div>
+        </div>
+        <div class="store-grid" id="items-list"></div>
+        <div class="checkout-bar">
+            <div class="price-tag" id="price-display">Select Item</div>
+            <button class="action-btn" onclick="handleAction()">PROCEED</button>
+        </div>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
@@ -30,8 +66,68 @@
         let gridSize = 4;
         let tiles = [];
         let score = parseInt(localStorage.getItem('diamondScore')) || 0;
+        let currentMode = 'points';
+        let selectedItem = null;
+
+        const mlItems = [
+            { name: '5 Diamonds', points: 5000, gpay: 10 },
+            { name: '12 Diamonds', points: 12000, gpay: 20 },
+            { name: '50 Diamonds', points: 50000, gpay: 85 },
+            { name: 'Starlight', points: 300000, gpay: 450 }
+        ];
+
         document.getElementById('total-diamonds').innerText = score;
         document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
+
+        function toggleStore(show) {
+            document.getElementById('game-ui').style.display = show ? 'none' : 'block';
+            document.getElementById('store-section').style.display = show ? 'block' : 'none';
+            if(show) renderItems();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.pay-mode').forEach(el => el.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+            renderItems();
+        }
+
+        function renderItems() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = '';
+            mlItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'store-card';
+                card.innerHTML = `<b>${item.name}</b><br><small>${currentMode==='points' ? item.points+' 💎' : '₹'+item.gpay}</small>`;
+                card.onclick = () => {
+                    selectedItem = item;
+                    document.querySelectorAll('.store-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    document.getElementById('price-display').innerText = currentMode==='points' ? item.points+' 💎' : '₹'+item.gpay;
+                };
+                list.appendChild(card);
+            });
+        }
+
+        function handleAction() {
+            if (!selectedItem) { tg.showAlert("Item thlang rawh le!"); return; }
+            if (currentMode === 'points') {
+                if (score >= selectedItem.points) {
+                    tg.showConfirm(`${selectedItem.name} hi ${selectedItem.points} 💎 in i redeem duh em?`, (ok) => {
+                        if(ok) {
+                            score -= selectedItem.points;
+                            localStorage.setItem('diamondScore', score);
+                            document.getElementById('total-diamonds').innerText = score;
+                            tg.showAlert("Success! I score a hek ta. Admin (Ruata) hnenah i ML ID leh screenshot va thawn rawh.");
+                            window.location.href = "https://t.me/YOUR_USERNAME";
+                        }
+                    });
+                } else { tg.showAlert("I points a la tawk lo! Khel leh hnem deuh rawh."); }
+            } else {
+                tg.showAlert(`₹${selectedItem.gpay} man ${selectedItem.name} i lei dawn a ni. I ML ID leh G-Pay screenshot Admin (Ruata) hnenah va thawn rawh.`);
+                window.location.href = "https://t.me/YOUR_USERNAME";
+            }
+        }
 
         function initGame() {
             tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
@@ -41,8 +137,8 @@
         function createBoard() {
             const board = document.getElementById('puzzle-board');
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            const containerSize = Math.min(window.innerWidth - 40, 320);
-            const tileSize = (containerSize / gridSize) - 5;
+            const containerSize = Math.min(window.innerWidth - 30, 340);
+            const tileSize = (containerSize / gridSize) - 6;
             board.style.width = containerSize + "px";
             board.innerHTML = '';
             tiles.forEach((tile, index) => {
@@ -67,7 +163,8 @@
                     score += 50;
                     localStorage.setItem('diamondScore', score);
                     document.getElementById('total-diamonds').innerText = score;
-                    tg.showAlert("Congrats! +50 💎");
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("Level Complete! +50 💎");
                     shuffle();
                 }
             }
@@ -86,6 +183,7 @@
             }
             createBoard();
         }
+
         initGame();
     </script>
 </body>
