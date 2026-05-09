@@ -14,8 +14,8 @@
         .tab-btn.active { background: #f1c40f; color: black; font-weight: bold; }
 
         #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; min-height: 250px; }
-        .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .empty { background: #0f0f0f; border: none; box-shadow: none; }
+        .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .empty { background: #0f0f0f; border: none; }
 
         .btn { padding: 12px; border-radius: 12px; width: 95%; font-weight: bold; border: none; cursor: pointer; margin: 5px 0; text-transform: uppercase; }
         .btn-restart { background: #ff4757; color: white; }
@@ -23,6 +23,10 @@
         
         #store-section { display:none; background:#f4f4f4; color:#333; min-height: 100vh; position: fixed; top: 0; left: 0; width: 100%; z-index: 100; text-align: left; overflow-y: auto; }
         .store-header { background: white; padding: 15px; border-bottom: 1px solid #ddd; position: sticky; top: 0; }
+        .mode-selector { display: flex; padding: 10px; gap: 10px; background: #eee; }
+        .mode-btn { flex: 1; padding: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .mode-btn.active { background: #f1c40f; color: black; font-weight: bold; }
+
         .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; padding-bottom: 100px; }
         .store-card { background: white; padding: 15px 10px; border-radius: 12px; border: 1px solid #ddd; text-align: center; cursor: pointer; }
         .store-card.selected { border: 2px solid #f1c40f; background: #fffdf0; }
@@ -44,18 +48,25 @@
         </div>
         <div id="puzzle-board"></div>
         <button class="btn btn-restart" onclick="shuffle()">Restart Level</button>
-        <button class="btn btn-store" onclick="toggleStore(true)">🛒 Redeem Diamond Coins</button>
+        <button class="btn btn-store" onclick="toggleStore(true)">🛒 Shop & Withdraw</button>
     </div>
 
     <div id="store-section">
         <div class="store-header">
             <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold;">⬅ Back</button>
-            <h3 style="margin: 10px 0;">Diamond Coin Store</h3>
+            <h3 style="margin: 5px 0;">Store & Payout</h3>
         </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" id="btn-redeem" onclick="setMode('redeem')">REDEEM COINS</button>
+            <button class="mode-btn" id="btn-buy" onclick="setMode('buy')">BUY DIAMONDS</button>
+        </div>
+
         <div class="store-grid" id="items-list"></div>
+        
         <div class="checkout-bar">
             <div id="price-display" style="font-weight:bold;">Select Item</div>
-            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:12px 25px; border-radius:10px; font-weight:bold;">PROCEED</button>
+            <button onclick="handleAction()" id="action-btn" style="background:#f1c40f; border:none; padding:12px 25px; border-radius:10px; font-weight:bold;">PROCEED</button>
         </div>
     </div>
 
@@ -65,15 +76,20 @@
         let gridSize = 3;
         let tiles = [];
         let score = parseInt(localStorage.getItem('diamondScore')) || 0;
+        let currentMode = 'redeem';
         let selectedItem = null;
 
-        const shopItems = [
-            { name: '5 Diamonds', coins: 500 },
-            { name: '12 Diamonds', coins: 1100 },
-            { name: '50 Diamonds', coins: 4500 },
-            { name: '100 Diamonds', coins: 8500 },
-            { name: 'Weekly Pass', coins: 15000 },
-            { name: 'Starlight Member', coins: 40000 }
+        const redeemItems = [
+            { name: '₹50 Withdraw', coins: 5000, type: 'cash' },
+            { name: '₹100 Withdraw', coins: 10000, type: 'cash' },
+            { name: '5 Diamonds', coins: 500, type: 'diamond' },
+            { name: 'Weekly Pass', coins: 15000, type: 'diamond' }
+        ];
+
+        const buyItems = [
+            { name: '50 Diamonds', price: '₹40', type: 'gpay' },
+            { name: '100 Diamonds', price: '₹80', type: 'gpay' },
+            { name: 'Weekly Pass', price: '₹160', type: 'gpay' }
         ];
 
         document.getElementById('total-coins').innerText = score;
@@ -147,13 +163,21 @@
             if(show) renderItems();
         }
 
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-redeem').classList.toggle('active', mode === 'redeem');
+            document.getElementById('btn-buy').classList.toggle('active', mode === 'buy');
+            renderItems();
+        }
+
         function renderItems() {
             const list = document.getElementById('items-list');
             list.innerHTML = '';
-            shopItems.forEach(item => {
+            const items = (currentMode === 'redeem') ? redeemItems : buyItems;
+            items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'store-card';
-                card.innerHTML = `<b>${item.name}</b><br><small>🪙 ${item.coins}</small>`;
+                card.innerHTML = `<b>${item.name}</b><br><small>${item.coins ? '🪙 '+item.coins : item.price}</small>`;
                 card.onclick = () => {
                     selectedItem = item;
                     document.querySelectorAll('.store-card').forEach(c => c.classList.remove('selected'));
@@ -166,17 +190,23 @@
 
         function handleAction() {
             if (!selectedItem) { tg.showAlert("Item thlang rawh!"); return; }
-            if (score >= selectedItem.coins) {
-                tg.showConfirm(`${selectedItem.name} hi i redeem duh takzet em?`, (ok) => {
-                    if(ok) {
-                        score -= selectedItem.coins;
-                        localStorage.setItem('diamondScore', score);
-                        document.getElementById('total-coins').innerText = score;
-                        tg.showAlert("Success! Admin hnenah i screenshot hi va thawn rawh.");
-                        window.location.href = "https://t.me/Ruata_zote";
-                    }
-                });
-            } else { tg.showAlert("I coin a la tawk lo!"); }
+            
+            if (currentMode === 'redeem') {
+                if (score >= selectedItem.coins) {
+                    tg.showConfirm(`${selectedItem.name} hi redeem duh takzet em?`, (ok) => {
+                        if(ok) {
+                            score -= selectedItem.coins;
+                            localStorage.setItem('diamondScore', score);
+                            document.getElementById('total-coins').innerText = score;
+                            tg.showAlert("Success! Admin hnenah i Account No/ML ID leh screenshot va thawn rawh.");
+                            window.location.href = "https://t.me/Ruata_zote";
+                        }
+                    });
+                } else { tg.showAlert("I coin a la tawk lo!"); }
+            } else {
+                tg.showAlert(`GPay hmanga ${selectedItem.name} lei turin Admin be rawh.`);
+                window.location.href = "https://t.me/Ruata_zote";
+            }
         }
 
         initGame();
