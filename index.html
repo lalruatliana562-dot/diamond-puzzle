@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Diamond Coin Puzzle</title>
+    <title>Diamond Puzzle Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
@@ -13,19 +13,18 @@
         .tab-btn { background: #333; color: #ccc; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; }
         .tab-btn.active { background: #f1c40f; color: black; font-weight: bold; }
 
-        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; }
+        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; min-height: 250px; }
         .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .empty { background: #0f0f0f; border: none; box-shadow: none; }
 
-        .btn { padding: 12px; border-radius: 12px; width: 90%; font-weight: bold; border: none; cursor: pointer; margin: 5px 0; text-transform: uppercase; }
+        .btn { padding: 12px; border-radius: 12px; width: 95%; font-weight: bold; border: none; cursor: pointer; margin: 5px 0; text-transform: uppercase; }
         .btn-restart { background: #ff4757; color: white; }
         .btn-store { background: #f1c40f; color: black; }
         
-        /* Store UI Fix */
         #store-section { display:none; background:#f4f4f4; color:#333; min-height: 100vh; position: fixed; top: 0; left: 0; width: 100%; z-index: 100; text-align: left; overflow-y: auto; }
         .store-header { background: white; padding: 15px; border-bottom: 1px solid #ddd; position: sticky; top: 0; }
         .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; padding-bottom: 100px; }
-        .store-card { background: white; padding: 15px 10px; border-radius: 12px; border: 1px solid #ddd; text-align: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .store-card { background: white; padding: 15px 10px; border-radius: 12px; border: 1px solid #ddd; text-align: center; cursor: pointer; }
         .store-card.selected { border: 2px solid #f1c40f; background: #fffdf0; }
         .checkout-bar { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; border-top: 2px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
     </style>
@@ -50,13 +49,13 @@
 
     <div id="store-section">
         <div class="store-header">
-            <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold; cursor:pointer;">⬅ Back to Game</button>
+            <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold;">⬅ Back</button>
             <h3 style="margin: 10px 0;">Diamond Coin Store</h3>
         </div>
         <div class="store-grid" id="items-list"></div>
         <div class="checkout-bar">
-            <div id="price-display" style="font-weight:bold; color:#d35400;">Select Item</div>
-            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; cursor:pointer;">PROCEED</button>
+            <div id="price-display" style="font-weight:bold;">Select Item</div>
+            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:12px 25px; border-radius:10px; font-weight:bold;">PROCEED</button>
         </div>
     </div>
 
@@ -78,7 +77,7 @@
         ];
 
         document.getElementById('total-coins').innerText = score;
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Ruata_";
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
 
         function changeLevel(size, event) {
             gridSize = size;
@@ -154,12 +153,12 @@
             shopItems.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'store-card';
-                card.innerHTML = `<b>${item.name}</b><br><small style="color:#f39c12">🪙 ${item.coins} Coins</small>`;
+                card.innerHTML = `<b>${item.name}</b><br><small>🪙 ${item.coins}</small>`;
                 card.onclick = () => {
                     selectedItem = item;
                     document.querySelectorAll('.store-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
-                    document.getElementById('price-display').innerText = item.name + " (" + item.coins + ")";
+                    document.getElementById('price-display').innerText = item.name;
                 };
                 list.appendChild(card);
             });
@@ -173,11 +172,11 @@
                         score -= selectedItem.coins;
                         localStorage.setItem('diamondScore', score);
                         document.getElementById('total-coins').innerText = score;
-                        tg.showAlert("Request sent! Admin hnenah i ML ID leh screenshot hi va thawn rawh le.");
+                        tg.showAlert("Success! Admin hnenah i screenshot hi va thawn rawh.");
                         window.location.href = "https://t.me/Ruata_zote";
                     }
                 });
-            } else { tg.showAlert("I coin a la tawk lo! Khel hnem deuh rawh."); }
+            } else { tg.showAlert("I coin a la tawk lo!"); }
         }
 
         initGame();
