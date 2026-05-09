@@ -9,11 +9,11 @@
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
         .stats { display: flex; justify-content: space-around; background: #1a1a1a; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #f1c40f; }
         
-        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
-        .tab-btn { background: #333; color: #ccc; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; }
+        .tab-btn { background: #333; color: #ccc; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; }
         .tab-btn.active { background: #f1c40f; color: black; font-weight: bold; }
 
-        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; min-height: 200px; }
+        #puzzle-board { display: grid; gap: 5px; justify-content: center; margin: 15px auto; background: #222; padding: 8px; border-radius: 12px; border: 2px solid #333; }
         .tile { background: linear-gradient(135deg, #f1c40f, #f39c12); color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .empty { background: #0f0f0f; border: none; box-shadow: none; }
 
@@ -21,39 +21,42 @@
         .btn-restart { background: #ff4757; color: white; }
         .btn-store { background: #f1c40f; color: black; }
         
-        #store-section { display:none; background:#f4f4f4; color:#333; min-height: 100vh; text-align: left; }
+        /* Store UI Fix */
+        #store-section { display:none; background:#f4f4f4; color:#333; min-height: 100vh; position: fixed; top: 0; left: 0; width: 100%; z-index: 100; text-align: left; overflow-y: auto; }
+        .store-header { background: white; padding: 15px; border-bottom: 1px solid #ddd; position: sticky; top: 0; }
+        .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; padding-bottom: 100px; }
+        .store-card { background: white; padding: 15px 10px; border-radius: 12px; border: 1px solid #ddd; text-align: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .store-card.selected { border: 2px solid #f1c40f; background: #fffdf0; }
+        .checkout-bar { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; border-top: 2px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div id="game-ui">
         <h3 style="color: #f1c40f; margin: 10px 0;">💎 Diamond Coin Puzzle</h3>
-        
         <div class="stats">
             <div>Player: <b id="user-name">...</b></div>
             <div>Coins: <b id="total-coins" style="color:#f1c40f">0</b> 🪙</div>
         </div>
-
         <div class="tabs">
             <button class="tab-btn active" onclick="changeLevel(3, event)">3x3</button>
             <button class="tab-btn" onclick="changeLevel(4, event)">4x4</button>
             <button class="tab-btn" onclick="changeLevel(5, event)">5x5</button>
         </div>
-
         <div id="puzzle-board"></div>
-        
         <button class="btn btn-restart" onclick="shuffle()">Restart Level</button>
         <button class="btn btn-store" onclick="toggleStore(true)">🛒 Redeem Diamond Coins</button>
     </div>
 
     <div id="store-section">
-        <div style="background: white; padding: 15px; border-bottom: 1px solid #ddd;">
-            <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold;">⬅ Back</button>
+        <div class="store-header">
+            <button onclick="toggleStore(false)" style="background:none; border:none; color:#f39c12; font-weight:bold; cursor:pointer;">⬅ Back to Game</button>
             <h3 style="margin: 10px 0;">Diamond Coin Store</h3>
         </div>
-        <div style="padding: 20px; text-align: center;">
-            <p>Admin be turin a hnuaia button hi hmet rawh.</p>
-            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:15px 30px; border-radius:10px; font-weight:bold; cursor:pointer;">CONTACT ADMIN</button>
+        <div class="store-grid" id="items-list"></div>
+        <div class="checkout-bar">
+            <div id="price-display" style="font-weight:bold; color:#d35400;">Select Item</div>
+            <button onclick="handleAction()" style="background:#f1c40f; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; cursor:pointer;">PROCEED</button>
         </div>
     </div>
 
@@ -63,9 +66,19 @@
         let gridSize = 3;
         let tiles = [];
         let score = parseInt(localStorage.getItem('diamondScore')) || 0;
+        let selectedItem = null;
+
+        const shopItems = [
+            { name: '5 Diamonds', coins: 500 },
+            { name: '12 Diamonds', coins: 1100 },
+            { name: '50 Diamonds', coins: 4500 },
+            { name: '100 Diamonds', coins: 8500 },
+            { name: 'Weekly Pass', coins: 15000 },
+            { name: 'Starlight Member', coins: 40000 }
+        ];
 
         document.getElementById('total-coins').innerText = score;
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Player";
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Ruata_";
 
         function changeLevel(size, event) {
             gridSize = size;
@@ -86,17 +99,12 @@
             const tileSize = (containerSize / gridSize) - 6;
             board.style.width = containerSize + "px";
             board.innerHTML = '';
-            
             tiles.forEach((tile, index) => {
                 const div = document.createElement('div');
                 div.style.width = tileSize + "px"; div.style.height = tileSize + "px";
                 div.classList.add('tile');
-                if (tile === gridSize * gridSize - 1) {
-                    div.classList.add('empty');
-                    div.innerText = '';
-                } else {
-                    div.innerText = tile + 1;
-                }
+                if (tile === gridSize * gridSize - 1) div.classList.add('empty');
+                else div.innerText = tile + 1;
                 div.onclick = () => moveTile(index);
                 board.appendChild(div);
             });
@@ -104,4 +112,75 @@
 
         function moveTile(index) {
             const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
-            const row = Math
+            const row = Math.floor(index/gridSize), col = index%gridSize;
+            const eRow = Math.floor(emptyIdx/gridSize), eCol = emptyIdx%gridSize;
+            if (Math.abs(row-eRow) + Math.abs(col-eCol) === 1) {
+                [tiles[index], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[index]];
+                createBoard();
+                if (tiles.every((t, i) => t === i)) {
+                    let gain = (gridSize === 3) ? 5 : (gridSize === 4) ? 10 : 20;
+                    score += gain;
+                    localStorage.setItem('diamondScore', score);
+                    document.getElementById('total-coins').innerText = score;
+                    tg.showAlert(`Level Complete! +${gain} Coins 🪙`);
+                    setTimeout(() => { shuffle(); }, 1000);
+                }
+            }
+        }
+
+        function shuffle() {
+            for (let i = 0; i < 150; i++) {
+                const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
+                const n = [];
+                if (emptyIdx >= gridSize) n.push(emptyIdx - gridSize);
+                if (emptyIdx < gridSize*(gridSize-1)) n.push(emptyIdx + gridSize);
+                if (emptyIdx % gridSize !== 0) n.push(emptyIdx - 1);
+                if (emptyIdx % gridSize !== gridSize-1) n.push(emptyIdx + 1);
+                const r = n[Math.floor(Math.random()*n.length)];
+                [tiles[emptyIdx], tiles[r]] = [tiles[r], tiles[emptyIdx]];
+            }
+            createBoard();
+        }
+
+        function toggleStore(show) {
+            document.getElementById('game-ui').style.display = show ? 'none' : 'block';
+            document.getElementById('store-section').style.display = show ? 'block' : 'none';
+            if(show) renderItems();
+        }
+
+        function renderItems() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = '';
+            shopItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'store-card';
+                card.innerHTML = `<b>${item.name}</b><br><small style="color:#f39c12">🪙 ${item.coins} Coins</small>`;
+                card.onclick = () => {
+                    selectedItem = item;
+                    document.querySelectorAll('.store-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    document.getElementById('price-display').innerText = item.name + " (" + item.coins + ")";
+                };
+                list.appendChild(card);
+            });
+        }
+
+        function handleAction() {
+            if (!selectedItem) { tg.showAlert("Item thlang rawh!"); return; }
+            if (score >= selectedItem.coins) {
+                tg.showConfirm(`${selectedItem.name} hi i redeem duh takzet em?`, (ok) => {
+                    if(ok) {
+                        score -= selectedItem.coins;
+                        localStorage.setItem('diamondScore', score);
+                        document.getElementById('total-coins').innerText = score;
+                        tg.showAlert("Request sent! Admin hnenah i ML ID leh screenshot hi va thawn rawh le.");
+                        window.location.href = "https://t.me/Ruata_zote";
+                    }
+                });
+            } else { tg.showAlert("I coin a la tawk lo! Khel hnem deuh rawh."); }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
