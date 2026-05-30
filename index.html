@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+4 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -32,6 +32,7 @@
         .store-card.selected { border: 2px solid #f1c40f; background: #fffdf0; }
         .checkout-bar { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px; border-top: 2px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
     </style>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
 
@@ -213,6 +214,123 @@
         }
 
         initGame();
+    // Adsgram Init (Block ID 33486 hmang khan)
+const AdController = window.Adsgram.init({ blockId: "33486" });
+
+// Apps an hawn apianga countdown lo check tur
+window.addEventListener('DOMContentLoaded', () => {
+    checkCountdown();
+});
+
+function checkCountdown() {
+    let withdrawTime = localStorage.getItem("withdraw_timestamp");
+    if (withdrawTime) {
+        let startTime = parseInt(withdrawTime);
+        let fortyEightHours = 48 * 60 * 60 * 1000; 
+        let now = new Date().getTime();
+        let remainingTime = (startTime + fortyEightHours) - now;
+
+        if (remainingTime > 0) {
+            document.getElementById("countdown-box").style.display = "block";
+            startTimer(remainingTime);
+        } else {
+            localStorage.removeItem("withdraw_timestamp");
+            document.getElementById("countdown-box").style.background = "#28a745";
+            document.getElementById("countdown-box").innerHTML = "🎉 Withdraw Success!";
+            document.getElementById("countdown-box").style.display = "block";
+        }
+    }
+}
+
+function startTimer(duration) {
+    let timer = duration / 1000;
+    let interval = setInterval(function () {
+        let hours = parseInt(timer / 3600, 10);
+        let minutes = parseInt((timer % 3600) / 60, 10);
+        let seconds = parseInt(timer % 60, 10);
+
+        hours = hours < 10 ? "0" + hours : hours;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        document.getElementById("timer").textContent = hours + ":" + minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            clearInterval(interval);
+            document.getElementById("countdown-box").style.background = "#28a745";
+            document.getElementById("countdown-box").innerHTML = "🎉 Withdraw Success!";
+            localStorage.removeItem("withdraw_timestamp");
+        }
+    }, 1000);
+}
+
+function processWithdraw() {
+    let name = document.getElementById("w-name").value;
+    let gpay = document.getElementById("w-gpay").value;
+    let upi = document.getElementById("w-upi").value;
+    let amount = document.getElementById("w-amount").value;
+
+    if(!name || !gpay || !amount) {
+        alert("Khawngaihin i hming, G-Pay no leh zat tur thun hmasa rawh u");
+        return;
+    }
+
+    AdController.show().then((result) => {
+        let data = { type: "withdraw", name: name, gpay: gpay, upi: upi, amount: amount };
+        // Telegram Bot hnenah data kan vawm lut nghal
+        Telegram.WebApp.sendData(JSON.stringify(data));
+        
+        localStorage.setItem("withdraw_timestamp", new Date().getTime().toString());
+        checkCountdown();
+    }).catch((err) => {
+        alert("Ads i en tlang lo! En phawt la chumi hnuah chauh withdraw theih a ni.");
+    });
+}
+
+function processRedeem() {
+    let ign = document.getElementById("r-ign").value;
+    let gameid = document.getElementById("r-gameid").value;
+    let zoneid = document.getElementById("r-zoneid").value;
+    let amount = document.getElementById("r-amount").value;
+
+    if(!ign || !gameid || !zoneid || !amount) {
+        alert("Khawngaihin ML data fill-up vek rawh u");
+        return;
+    }
+
+    AdController.show().then((result) => {
+        let data = { type: "redeem", ign: ign, gameid: gameid, zoneid: zoneid, amount: amount };
+        Telegram.WebApp.sendData(JSON.stringify(data));
+        
+        localStorage.setItem("withdraw_timestamp", new Date().getTime().toString());
+        checkCountdown();
+    }).catch((err) => {
+        alert("Ads i en tlang lo! En phawt la chumi hnuah chauh redeem theih a ni.");
+    });
+}
+
     </script>
+    <div id="withdraw-form" style="margin: 20px; padding: 15px; background: #222; border-radius: 8px; text-align: center; font-family: sans-serif;">
+        <h3 style="color: #fff; margin-bottom: 15px;">Withdraw (G-Pay / UPI)</h3>
+        <input type="text" id="w-name" placeholder="I Hming" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="text" id="w-gpay" placeholder="G-Pay Number" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="text" id="w-upi" placeholder="UPI ID (A duh tan)" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="number" id="w-amount" placeholder="Withdraw tur zat" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <button onclick="processWithdraw()" style="background: #28a745; color:white; padding:12px 25px; border:none; border-radius:5px; margin-top:10px; font-weight:bold; cursor:pointer; width:94%;">Withdraw</button>
+    </div>
+
+    <div id="redeem-form" style="margin: 20px; padding: 15px; background: #222; border-radius: 8px; text-align: center; font-family: sans-serif;">
+        <h3 style="color: #fff; margin-bottom: 15px;">ML Diamond Redeem</h3>
+        <input type="text" id="r-ign" placeholder="IGN (In-Game Name)" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="number" id="r-gameid" placeholder="Game ID" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="number" id="r-zoneid" placeholder="Zone ID" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <input type="number" id="r-amount" placeholder="Diamond zat tur" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
+        <button onclick="processRedeem()" style="background: #007bff; color:white; padding:12px 25px; border:none; border-radius:5px; margin-top:10px; font-weight:bold; cursor:pointer; width:94%;">Redeem</button>
+    </div>
+
+    <div id="countdown-box" style="display:none; margin: 20px; padding: 15px; background: #dc3545; color: white; text-align: center; font-weight: bold; border-radius: 8px; font-family: sans-serif;">
+        ⚠️ PROCESSING... <br>
+        Darkar 48 chhungin i hmu ang. Hun la awm: <span id="timer" style="font-size: 24px; display:block; margin-top:5px; letter-spacing: 1px;">48:00:00</span>
+    </div>
 </body>
 </html>
