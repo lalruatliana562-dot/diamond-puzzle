@@ -286,49 +286,8 @@ function processWithdraw() {
         alert("Ads i en tlang lo! En phawt la chumi hnuah chauh withdraw theih a ni.");
     });
 }
-
-function processRedeem() {
-    let ign = document.getElementById("r-ign").value;
-    let gameid = document.getElementById("r-gameid").value;
-    let zoneid = document.getElementById("r-zoneid").value;
-    let amount = document.getElementById("r-amount").value;
-
-    if(!ign || !gameid || !zoneid || !amount) {
-        alert("Khawngaihin ML data fill-up vek rawh u");
-        return;
-    }
-
-    AdController.show().then((result) => {
-        let data = { type: "redeem", ign: ign, gameid: gameid, zoneid: zoneid, amount: amount };
-        Telegram.WebApp.sendData(JSON.stringify(data));
-        
-        localStorage.setItem("withdraw_timestamp", new Date().getTime().toString());
-        checkCountdown();
-    }).catch((err) => {
-        alert("Ads i en tlang lo! En phawt la chumi hnuah chauh redeem theih a ni.");
-    });
-}
-
-    </script>
-    <div id="withdraw-form" style="margin: 20px; padding: 15px; background: #222; border-radius: 8px; text-align: center; font-family: sans-serif;">
-        <h3 style="color: #fff; margin-bottom: 15px;">Withdraw (G-Pay / UPI)</h3>
-        <input type="text" id="w-name" placeholder="I Hming" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="text" id="w-gpay" placeholder="G-Pay Number" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="text" id="w-upi" placeholder="UPI ID (A duh tan)" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="number" id="w-amount" placeholder="Withdraw tur zat" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <button onclick="processWithdraw()" style="background: #28a745; color:white; padding:12px 25px; border:none; border-radius:5px; margin-top:10px; font-weight:bold; cursor:pointer; width:94%;">Withdraw</button>
-    </div>
-
-    <div id="redeem-form" style="margin: 20px; padding: 15px; background: #222; border-radius: 8px; text-align: center; font-family: sans-serif;">
-        <h3 style="color: #fff; margin-bottom: 15px;">ML Diamond Redeem</h3>
-        <input type="text" id="r-ign" placeholder="IGN (In-Game Name)" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="number" id="r-gameid" placeholder="Game ID" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="number" id="r-zoneid" placeholder="Zone ID" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <input type="number" id="r-amount" placeholder="Diamond zat tur" style="width:90%; margin:5px; padding:10px; border-radius:5px; border:none;"><br>
-        <button onclick="processRedeem()" style="background: #007bff; color:white; padding:12px 25px; border:none; border-radius:5px; margin-top:10px; font-weight:bold; cursor:pointer; width:94%;">Redeem</button>
-    </div>
-
-    <div id="countdown-box" style="display:none; margin: 20px; padding: 15px; background: #dc3545; color: white; text-align: center; font-weight: bold; border-radius: 8px; font-family: sans-serif;">
+ </script>
+  <div id="countdown-box" style="display:none; margin: 20px; padding: 15px; background: #dc3545; color: white; text-align: center; font-weight: bold; border-radius: 8px; font-family: sans-serif;">
         ⚠️ PROCESSING... <br>
         Darkar 48 chhungin i hmu ang. Hun la awm: <span id="timer" style="font-size: 24px; display:block; margin-top:5px; letter-spacing: 1px;">48:00:00</span>
     </div>
