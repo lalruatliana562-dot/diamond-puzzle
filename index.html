@@ -81,20 +81,30 @@ function renderItems() {
     });
 }
 
-function handleAction() {
+ 
+      function handleAction() {
     if (!selectedItem) { tg.showAlert("Item thlang rawh!"); return; }
+    
     if (score >= selectedItem.coins) {
         tg.showConfirm(`${selectedItem.name} hi redeem duh takzet em?`, (ok) => {
             if (ok) {
-                // UI form a rawn ti lang ang
-                document.getElementById('store-section').innerHTML += `
-                    <div id="withdraw-form" style="padding: 20px;">
-                        <input type="text" id="w-name" placeholder="I Hming" style="width:100%; margin-bottom:10px;">
-                        <input type="text" id="w-gpay" placeholder="GPay No / UPI" style="width:100%; margin-bottom:10px;">
-                        <button onclick="processWithdraw()" style="width:100%; background:green; color:white; border:none; padding:10px;">Confirm Withdraw</button>
+                // Style hi clear la, heti hian dah rawh
+                const section = document.getElementById('store-section');
+                section.innerHTML = `
+                    <div id="withdraw-form" style="padding: 20px; display: block; background: #fff; color: #000;">
+                        <h3>Withdraw Details</h3>
+                        <input type="text" id="w-name" placeholder="I Hming" style="width:90%; padding:10px; margin-bottom:10px;">
+                        <input type="text" id="w-gpay" placeholder="GPay No / UPI" style="width:90%; padding:10px; margin-bottom:10px;">
+                        <button onclick="processWithdraw()" style="width:100%; padding:10px; background:green; color:white; border:none;">Confirm Withdraw</button>
                     </div>
                 `;
             }
+        });
+    } else {
+        tg.showAlert("I coin a la tawk lo!");
+    }
+}
+      }
         });
     } else {
         tg.showAlert("I coin a la tawk lo!");
