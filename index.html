@@ -4,14 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diamond Puzzle Pro</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
-        #puzzle-board { display: grid; gap: 5px; margin: 20px auto; width: 300px; }
-        .tile { width: 100px; height: 100px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .tile.empty { background: #bdc3c7; }
-        .store-card { background: white; padding: 15px; margin: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #ddd; }
-        .store-card.selected { border: 2px solid green; }
-    </style>
+   <style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+    #puzzle-board { 
+        display: grid; 
+        grid-template-columns: repeat(3, 100px); /* Hemi hian tile 3 a in-rem ang */
+        gap: 5px; 
+        margin: 20px auto; 
+        width: 310px; /* 100*3 + 5*2 gap */
+    }
+    .tile { width: 100px; height: 100px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+    .tile.empty { background: #bdc3c7; }
+    .store-card { background: white; padding: 15px; margin: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #ddd; }
+</style>
+
 </head>
 <body>
 
