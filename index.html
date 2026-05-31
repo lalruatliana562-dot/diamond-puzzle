@@ -4,27 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diamond Puzzle Pro</title>
-   <style>
-    body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
-    #puzzle-board { 
-        display: grid; 
-        grid-template-columns: repeat(3, 100px); /* Hemi hian tile 3 a in-rem ang */
-        gap: 5px; 
-        margin: 20px auto; 
-        width: 310px; /* 100*3 + 5*2 gap */
-    }
-    .tile { width: 100px; height: 100px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-    .tile.empty { background: #bdc3c7; }
-    .store-card { background: white; padding: 15px; margin: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #ddd; }
-</style>
-
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+        #puzzle-board { display: grid; gap: 5px; margin: 20px auto; }
+        .tile { width: 80px; height: 80px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border-radius: 5px; }
+        .tile.empty { background: #bdc3c7; }
+        .store-card { background: white; padding: 15px; margin: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #ddd; }
+        #withdraw-form { background: white; padding: 20px; border-radius: 10px; }
+    </style>
 </head>
 <body>
 
     <div id="game-ui">
         <h2>Coins: <span id="total-coins">0</span></h2>
+        <button onclick="setLevel('easy')">Easy (3x3)</button>
+        <button onclick="setLevel('hard')">Hard (4x4)</button>
         <div id="puzzle-board"></div>
-        <button onclick="toggleStore(true)" style="padding:10px 20px;">Store</button>
+        <button onclick="toggleStore(true)" style="padding:10px 20px; margin-top:20px;">Store</button>
     </div>
 
     <div id="store-section" style="display:none;">
@@ -43,13 +39,18 @@
 
         document.getElementById('total-coins').innerText = score;
 
+        function setLevel(level) {
+            gridSize = (level === 'hard') ? 4 : 3;
+            initGame();
+        }
+
         function initGame() {
             tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
             shuffle();
         }
 
         function shuffle() {
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 200; i++) {
                 const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
                 const n = [];
                 if (emptyIdx >= gridSize) n.push(emptyIdx - gridSize);
@@ -64,6 +65,7 @@
 
         function createBoard() {
             const board = document.getElementById('puzzle-board');
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
             board.innerHTML = '';
             tiles.forEach((tile, index) => {
                 const div = document.createElement('div');
@@ -76,15 +78,17 @@
 
         function moveTile(index) {
             const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
-            if (Math.abs(index - emptyIdx) === 1 || Math.abs(index - emptyIdx) === gridSize) {
+            const r = Math.floor(index / gridSize), c = index % gridSize;
+            const er = Math.floor(emptyIdx / gridSize), ec = emptyIdx % gridSize;
+            if (Math.abs(r - er) + Math.abs(c - ec) === 1) {
                 [tiles[index], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[index]];
                 createBoard();
                 if (tiles.every((t, i) => t === i)) {
-                    score += 10;
+                    score += (gridSize === 3 ? 10 : 20);
                     localStorage.setItem('diamondScore', score);
                     document.getElementById('total-coins').innerText = score;
-                    tg.showAlert("Level Complete! +10 Coins 💎");
-                    setTimeout(shuffle, 1000);
+                    tg.showAlert("Level Complete! 🎉");
+                    setTimeout(initGame, 1000);
                 }
             }
         }
@@ -92,52 +96,40 @@
         function toggleStore(show) {
             document.getElementById('game-ui').style.display = show ? 'none' : 'block';
             document.getElementById('store-section').style.display = show ? 'block' : 'none';
-            if (show) renderItems();
+            if (show) renderStore();
         }
 
-        function renderItems() {
+        function renderStore() {
             const list = document.getElementById('items-list');
-            list.innerHTML = '<h3>Select Amount:</h3>';
+            list.innerHTML = '<h3>Redeem Points:</h3>';
             const items = [{ name: '₹50 Withdraw', coins: 5000 }, { name: '₹100 Withdraw', coins: 10000 }];
             items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'store-card';
                 card.innerHTML = `<b>${item.name}</b><br><small>${item.coins} coins</small>`;
                 card.onclick = () => {
-                    selectedItem = item;
-                    handleAction();
+                    if (score >= item.coins) {
+                        selectedItem = item;
+                        list.innerHTML = `
+                            <div id="withdraw-form">
+                                <h3>Details: ${item.name}</h3>
+                                <input type="text" id="w-name" placeholder="Name" style="width:90%;margin-bottom:10px;"><br>
+                                <input type="text" id="w-gpay" placeholder="GPay/UPI No" style="width:90%;margin-bottom:10px;"><br>
+                                <button onclick="processWithdraw()" style="width:100%;padding:10px;background:green;color:white;border:none;">Confirm</button>
+                            </div>
+                        `;
+                    } else { tg.showAlert("Coins a tawk lo!"); }
                 };
                 list.appendChild(card);
             });
-        }
-
-        function handleAction() {
-            if (score >= selectedItem.coins) {
-                tg.showConfirm(`Redeem ${selectedItem.name} hi i duh takzet em?`, (ok) => {
-                    if (ok) {
-                        document.getElementById('items-list').innerHTML = `
-                            <div id="withdraw-form" style="padding:20px;">
-                                <h3>Enter Details</h3>
-                                <input type="text" id="w-name" placeholder="I Hming" style="width:90%;margin-bottom:10px;"><br>
-                                <input type="text" id="w-gpay" placeholder="GPay/UPI No" style="width:90%;margin-bottom:10px;"><br>
-                                <button onclick="processWithdraw()" style="width:100%;padding:10px;background:green;color:white;border:none;">Confirm Withdraw</button>
-                            </div>
-                        `;
-                    }
-                });
-            } else {
-                tg.showAlert("I coin a la tawk lo!");
-            }
         }
 
         function processWithdraw() {
             let name = document.getElementById('w-name').value;
             let gpay = document.getElementById('w-gpay').value;
             if (!name || !gpay) { alert("Details dah vek rawh!"); return; }
-            
-            let data = { type: "withdraw", name: name, gpay: gpay, item: selectedItem.name };
-            tg.sendData(JSON.stringify(data));
-            tg.showAlert("Success! Admin hnenah thawn a ni.");
+            tg.sendData(JSON.stringify({ type: "withdraw", name, gpay, item: selectedItem.name }));
+            tg.showAlert("Success! Admin-ah thawn a ni.");
         }
 
         initGame();
