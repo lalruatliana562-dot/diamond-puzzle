@@ -1,3 +1,4 @@
+ // Initialization
 let tg = window.Telegram.WebApp;
 tg.expand();
 let gridSize = 3;
@@ -5,10 +6,10 @@ let tiles = [];
 let score = parseInt(localStorage.getItem('diamondScore')) || 0;
 let selectedItem = null;
 
-// Game Setup
+// UI Setup
 document.getElementById('total-coins').innerText = score;
-document.getElementById('user-name').innerText = tg.initDataUnsafe?.user?.first_name || "User";
 
+// Game Logic
 function initGame() {
     tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
     shuffle();
@@ -30,7 +31,6 @@ function shuffle() {
 
 function createBoard() {
     const board = document.getElementById('puzzle-board');
-    board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
     board.innerHTML = '';
     tiles.forEach((tile, index) => {
         const div = document.createElement('div');
@@ -43,68 +43,55 @@ function createBoard() {
 
 function moveTile(index) {
     const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
-    const row = Math.floor(index / gridSize), col = index % gridSize;
-    const eRow = Math.floor(emptyIdx / gridSize), eCol = emptyIdx % gridSize;
-    if (Math.abs(row - eRow) + Math.abs(col - eCol) === 1) {
+    if (Math.abs(index - emptyIdx) === 1 || Math.abs(index - emptyIdx) === gridSize) {
         [tiles[index], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[index]];
         createBoard();
         if (tiles.every((t, i) => t === i)) {
-            let gain = gridSize === 3 ? 5 : 10;
-            score += gain;
+            score += 10;
             localStorage.setItem('diamondScore', score);
             document.getElementById('total-coins').innerText = score;
-            tg.showAlert(`Level Complete! +${gain} Coins 💎`);
+            tg.showAlert("Level Complete! +10 Coins 💎");
             setTimeout(shuffle, 1000);
         }
     }
 }
 
 // Store & Withdrawal Logic
+function toggleStore(show) {
+    document.getElementById('game-ui').style.display = show ? 'none' : 'block';
+    document.getElementById('store-section').style.display = show ? 'block' : 'none';
+    if (show) renderItems();
+}
+
 function renderItems() {
     const list = document.getElementById('items-list');
-    list.innerHTML = '';
-    const items = [
-        { name: '₹50 Withdraw', coins: 5000 },
-        { name: '₹100 Withdraw', coins: 10000 }
-    ];
+    list.innerHTML = '<h3>Select Amount:</h3>';
+    const items = [{ name: '₹50 Withdraw', coins: 5000 }, { name: '₹100 Withdraw', coins: 10000 }];
     items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'store-card';
-        card.innerHTML = `<b>${item.name}</b><br><small>🪙 ${item.coins}</small>`;
+        card.innerHTML = `<b>${item.name}</b><br><small>${item.coins} coins</small>`;
         card.onclick = () => {
             selectedItem = item;
-            document.querySelectorAll('.store-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            document.getElementById('price-display').innerText = item.name;
+            handleAction();
         };
         list.appendChild(card);
     });
 }
 
- 
-      function handleAction() {
-    if (!selectedItem) { tg.showAlert("Item thlang rawh!"); return; }
-    
+function handleAction() {
     if (score >= selectedItem.coins) {
-        tg.showConfirm(`${selectedItem.name} hi redeem duh takzet em?`, (ok) => {
+        tg.showConfirm(`Redeem ${selectedItem.name} hi i duh takzet em?`, (ok) => {
             if (ok) {
-                // Style hi clear la, heti hian dah rawh
-                const section = document.getElementById('store-section');
-                section.innerHTML = `
-                    <div id="withdraw-form" style="padding: 20px; display: block; background: #fff; color: #000;">
-                        <h3>Withdraw Details</h3>
-                        <input type="text" id="w-name" placeholder="I Hming" style="width:90%; padding:10px; margin-bottom:10px;">
-                        <input type="text" id="w-gpay" placeholder="GPay No / UPI" style="width:90%; padding:10px; margin-bottom:10px;">
-                        <button onclick="processWithdraw()" style="width:100%; padding:10px; background:green; color:white; border:none;">Confirm Withdraw</button>
+                document.getElementById('store-section').innerHTML = `
+                    <div id="withdraw-form" style="padding:20px;">
+                        <h3>Enter Details</h3>
+                        <input type="text" id="w-name" placeholder="I Hming" style="width:90%;margin-bottom:10px;"><br>
+                        <input type="text" id="w-gpay" placeholder="GPay/UPI No" style="width:90%;margin-bottom:10px;"><br>
+                        <button onclick="processWithdraw()" style="width:100%;padding:10px;background:green;color:white;">Confirm</button>
                     </div>
                 `;
             }
-        });
-    } else {
-        tg.showAlert("I coin a la tawk lo!");
-    }
-}
-      }
         });
     } else {
         tg.showAlert("I coin a la tawk lo!");
@@ -114,16 +101,11 @@ function renderItems() {
 function processWithdraw() {
     let name = document.getElementById('w-name').value;
     let gpay = document.getElementById('w-gpay').value;
-    if (!name || !gpay) { alert("Details zawng zawng dah rawh!"); return; }
-    let data = { type: "withdraw", name: name, gpay: gpay, selected: selectedItem.name };
+    if (!name || !gpay) { alert("Details dah vek rawh!"); return; }
+    
+    let data = { type: "withdraw", name: name, gpay: gpay, item: selectedItem.name };
     tg.sendData(JSON.stringify(data));
-    tg.showAlert("Success! Admin hnenah details thawn a ni.");
-}
-
-function toggleStore(show) {
-    document.getElementById('game-ui').style.display = show ? 'none' : 'block';
-    document.getElementById('store-section').style.display = show ? 'block' : 'none';
-    if(show) renderItems();
+    tg.showAlert("Success! Admin hnenah thawn a ni.");
 }
 
 initGame();
