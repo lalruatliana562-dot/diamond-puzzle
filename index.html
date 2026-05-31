@@ -16,8 +16,10 @@
 </head>
 <body>
 
-    <div id="game-ui">
+         <div id="game-ui">
         <h2>Coins: <span id="total-coins">0</span></h2>
+        <button onclick="startGame()" style="padding:15px; background:green; color:white;">Start Game</button>
+        <br><br>
         <button onclick="setLevel('easy')">Easy (3x3)</button>
         <button onclick="setLevel('hard')">Hard (4x4)</button>
         <div id="puzzle-board"></div>
@@ -28,6 +30,7 @@
         <div id="items-list"></div>
         <button onclick="toggleStore(false)" style="margin-top:20px;">Back to Game</button>
     </div>
+
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
@@ -45,7 +48,11 @@
             initGame();
         }
 
-         function initGame() {
+      function startGame() {
+    initGame();
+    showAd();
+}
+   function initGame() {
     tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
     shuffle();
     showAd(); // HETAH HIAN DAH RAWH
